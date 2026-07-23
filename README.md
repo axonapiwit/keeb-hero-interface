@@ -114,6 +114,22 @@ with part motion instead of overwriting it.
 `PartName` is derived from it — rename a part in Blender and every downstream
 reference is a compile error instead of a silent `undefined` at animation time.
 
+### Reduced motion
+
+`prefers-reduced-motion: reduce` removes the motion nobody asked for and keeps
+the motion the user is driving:
+
+| removed | kept |
+|---|---|
+| the autoplay intro relay (parts land assembled, copy visible from frame one) | the scroll explode — it *is* the content, and it tracks scroll 1:1 |
+| idle sway + float | the click press, minus the elastic overshoot |
+| pointer parallax | |
+| the camera sweep across the scroll | |
+| the damping tail that keeps the board drifting after scrolling stops | |
+
+The engine listens for changes, so toggling the OS setting takes effect on a
+live page — no reload.
+
 ### StrictMode
 
 Dev double-mounts effects, so the engine is built to survive it:

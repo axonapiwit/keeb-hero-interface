@@ -43,6 +43,10 @@ declare global {
   }
 }
 
+/** Full-motion defaults. Reduced motion swaps both to their "off" value. */
+const SCROLL_SMOOTHING = 0.14;
+const SCROLL_ORBIT = 1.15;
+
 export interface StartOptions {
   canvas: HTMLCanvasElement;
   modelUrl?: string;
@@ -102,7 +106,7 @@ export async function startEngine({
     yaw: -0.42,
     pitch: 0.46,
     distance: fit.dist,
-    scrollOrbit: 1.15,
+    scrollOrbit: SCROLL_ORBIT,
     lateral: IS_MOBILE ? 0 : -11,
   };
 
@@ -111,8 +115,32 @@ export async function startEngine({
     signal,
   );
 
+  // ── prefers-reduced-motion ──────────────────────────────────────────
+  // Removed: the autoplay intro, the idle sway/float, pointer parallax, the
+  // camera sweep, and the damping tail that keeps the board drifting after
+  // scrolling stops. Kept: the explode itself, because it is the content and
+  // it is 1:1 with the scroll position — direct manipulation, not autoplay.
+  const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const applyMotionPreference = (reduced: boolean) => {
+    interactions.cfg.reduced = reduced;
+    interactions.cfg.idle = !reduced;
+    interactions.cfg.parallax = !reduced && !IS_MOBILE;
+    scroll.cfg.smoothing = reduced ? 1 : SCROLL_SMOOTHING; // 1 = no lerp tail
+    orbit.scrollOrbit = reduced ? 0 : SCROLL_ORBIT;
+  };
+  applyMotionPreference(motionQuery.matches);
+  motionQuery.addEventListener('change', (e) => applyMotionPreference(e.matches), { signal });
+
   onReady?.();
-  assemble.play();
+
+  if (motionQuery.matches) {
+    // land assembled without playing the relay; the copy is never hidden,
+    // so there is nothing to fade back in
+    for (const s of states) s.t = 1;
+  } else {
+    assemble.play();
+  }
 
   // ── loop ────────────────────────────────────────────────────────────
   const clock = new THREE.Clock();

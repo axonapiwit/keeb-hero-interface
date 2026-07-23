@@ -17,6 +17,12 @@ export interface InteractionConfig {
   floatAmp: number;
   floatSpeed: number;
   idle: boolean;
+  /**
+   * Honour prefers-reduced-motion: the press becomes a short flat dip instead
+   * of an elastic overshoot. Overshoot is the part people actually report as
+   * nauseating, and WCAG 2.3.3 lets interaction-triggered motion be reduced.
+   */
+  reduced: boolean;
 }
 
 export interface Interactions {
@@ -53,6 +59,7 @@ export function createInteractions(
     floatAmp: 0.17,
     floatSpeed: 0.5,
     idle: true,
+    reduced: false, // engine sets this from the media query, and on change
   };
 
   let targetX = 0;
@@ -87,10 +94,15 @@ export function createInteractions(
     if (pressing === s) return;
     pressing = s;
     animate(s, {
-      press: [
-        { to: 0.34, duration: 70, ease: 'outQuad' },
-        { to: 0, duration: 420, ease: 'outElastic(1, .55)' },
-      ],
+      press: cfg.reduced
+        ? [
+            { to: 0.34, duration: 60, ease: 'outQuad' },
+            { to: 0, duration: 130, ease: 'outQuad' },
+          ]
+        : [
+            { to: 0.34, duration: 70, ease: 'outQuad' },
+            { to: 0, duration: 420, ease: 'outElastic(1, .55)' },
+          ],
       onComplete: () => {
         if (pressing === s) pressing = null;
       },
