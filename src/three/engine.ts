@@ -5,6 +5,7 @@ import { createStates, applyStates, createScrollExplode } from './scrollExplode'
 import { createAssembleTimeline } from './timelineAssemble';
 import { createInteractions } from './interactions';
 import { createDebug } from './debug';
+import { mergeSwitches, pruneShadowCasters } from './optimise';
 import type { ScrollExplode } from './scrollExplode';
 import type { AssembleTimeline } from './timelineAssemble';
 import type { Interactions } from './interactions';
@@ -75,12 +76,11 @@ export async function startEngine({
   const missing = missingParts(report);
   if (missing.length) console.warn('[keeb-hero] unresolved parts:', missing);
 
-  root.traverse((o) => {
-    if ((o as THREE.Mesh).isMesh) {
-      o.castShadow = true;
-      o.receiveShadow = true;
-    }
-  });
+  // Draw-call surgery before anything else touches the graph. Measured on the
+  // deployed build: 272 meshes / 271 shadow casters ≈ 540 draw calls a frame.
+  const switchGroup = parts.KB_Switches_Group;
+  const merged = switchGroup ? mergeSwitches(switchGroup) : { before: 0, after: 0 };
+  const { casters } = pruneShadowCasters(root);
 
   // rig carries idle sway + pointer parallax so it never touches part transforms
   const rig = new THREE.Group();
@@ -118,6 +118,7 @@ export async function startEngine({
   const clock = new THREE.Clock();
   const camTarget = new THREE.Vector3();
   const right = new THREE.Vector3(); // reused each frame, never reallocated
+  let lastP = -1;
 
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 0.05);
@@ -141,10 +142,18 @@ export async function startEngine({
     camera.position.add(right);
     camera.lookAt(camTarget);
 
-    // The bar and hint read `--p` off the document. This is a CSS custom
-    // property, not React state, precisely because it changes every frame.
-    // Raw, not staged: staged progress visibly stalls the bar on every hold.
-    document.documentElement.style.setProperty('--p', scroll.raw.toFixed(4));
+    // The bar and hint read `--p` off the document — a CSS custom property, not
+    // React state, precisely because it changes every frame. Raw, not staged:
+    // staged progress visibly stalls the bar on every hold.
+    //
+    // Written only when it moves by a visible amount. A `--p` write on :root
+    // invalidates style for the whole document, and at 2 px of bar travel per
+    // 0.002 progress the extra writes buy nothing.
+    const p3 = Math.round(scroll.raw * 500) / 500;
+    if (p3 !== lastP) {
+      lastP = p3;
+      document.documentElement.style.setProperty('--p', String(p3));
+    }
     composer.render();
   });
 
@@ -198,13 +207,17 @@ export async function startEngine({
   });
   window.__keeb = handle;
 
+  let drawn = 0;
+  scene.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) drawn++;
+  });
   console.log(
     '[keeb-hero]',
-    stats.triangles.toLocaleString(),
-    'tris,',
-    states.length,
-    'animated parts, mobile:',
-    IS_MOBILE,
+    `${stats.triangles.toLocaleString()} tris,`,
+    `${states.length} parts,`,
+    `switches ${merged.before}->${merged.after} meshes,`,
+    `${drawn} meshes / ${casters} shadow casters,`,
+    `mobile: ${IS_MOBILE}`,
   );
 
   return engine;

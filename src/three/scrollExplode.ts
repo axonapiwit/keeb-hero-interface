@@ -135,13 +135,28 @@ export function createScrollExplode(
   };
   let target = 0;
   let current = 0;
+  // Cached, because reading scrollHeight forces a synchronous layout. The loop
+  // writes `--p` to the document every frame; reading layout right after that
+  // write made every frame pay for a reflow — measured at ~0.1 ms against ~0 ms
+  // for a clean read. It is recomputed only when it can actually change.
+  let scrollMax = 0;
 
+  const measure = () => {
+    scrollMax = document.documentElement.scrollHeight - innerHeight;
+  };
   const read = () => {
-    const max = document.documentElement.scrollHeight - innerHeight;
-    target = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
+    target = scrollMax > 0 ? Math.min(1, Math.max(0, scrollY / scrollMax)) : 0;
   };
   addEventListener('scroll', read, { passive: true, signal });
-  addEventListener('resize', read, { signal });
+  addEventListener(
+    'resize',
+    () => {
+      measure();
+      read();
+    },
+    { signal },
+  );
+  measure();
   read();
 
   return {
@@ -153,7 +168,8 @@ export function createScrollExplode(
       return target;
     },
     update(dt, claimed) {
-      read();
+      // no read() here: the scroll listener already keeps `target` fresh, and
+      // polling layout every frame is what made this jank
       current += (target - current) * Math.min(1, cfg.smoothing * dt * 60);
       const p = staged(current, cfg.stages, cfg.hold);
       if (claimed || !cfg.enabled) return p;
