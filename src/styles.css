@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;800;900&display=swap');
+
+:root {
+  color-scheme: dark;
+  --p: 0;
+  --ink: #edeae3;
+  --dim: #7c8290;
+  --hot: #e8500f;
+}
+* {
+  margin: 0;
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: auto;
+}
+body {
+  background: #0d0f14;
+  color: var(--ink);
+  font: 400 16px/1.55 Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+canvas#app {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+
+/* ── nav ─────────────────────────────────────────────── */
+nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.6rem clamp(1.2rem, 4vw, 3rem);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  mix-blend-mode: difference;
+}
+nav .mark {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+nav ul {
+  display: flex;
+  gap: 1.8rem;
+  list-style: none;
+}
+nav a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.62;
+}
+nav a:hover {
+  opacity: 1;
+}
+@media (max-width: 640px) {
+  nav ul {
+    display: none;
+  }
+}
+
+/* ── scroll content ──────────────────────────────────── */
+main {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+section {
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  padding: 0 clamp(1.2rem, 6vw, 5rem);
+}
+.hero h1 {
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.84;
+  font-size: clamp(3.4rem, 9.5vw, 8.5rem);
+  text-transform: uppercase;
+}
+/* keep the copy in the left column — the board is panned into the right */
+.hero > * {
+  max-width: min(46vw, 34rem);
+}
+@media (max-width: 900px) {
+  .hero > * {
+    max-width: 100%;
+  }
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--hot);
+}
+.hero .sub {
+  margin-top: 1.6rem;
+  max-width: 30ch;
+  color: var(--dim);
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+}
+.hero .meta {
+  margin-top: 2.2rem;
+  display: flex;
+  gap: 2.4rem;
+  flex-wrap: wrap;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.hero .meta b {
+  display: block;
+  color: var(--ink);
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  font-weight: 800;
+}
+
+.layer {
+  max-width: 32rem;
+}
+.layer:nth-of-type(even) {
+  margin-left: auto;
+  text-align: right;
+}
+.layer .idx {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: var(--hot);
+  font-weight: 500;
+}
+.layer h2 {
+  margin-top: 0.5rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  font-size: clamp(1.8rem, 4.5vw, 3.4rem);
+}
+.layer p {
+  margin-top: 0.8rem;
+  color: var(--dim);
+  max-width: 34ch;
+}
+.layer:nth-of-type(even) p {
+  margin-left: auto;
+}
+
+/* ── progress + hint ─────────────────────────────────── */
+.bar {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  z-index: 4;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--p));
+  background: var(--hot);
+}
+.hint {
+  position: fixed;
+  left: 50%;
+  bottom: 1.6rem;
+  z-index: 4;
+  translate: -50% 0;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+  opacity: calc(1 - var(--p) * 6);
+}
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-content: center;
+  background: #0d0f14;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.boot[data-error] {
+  color: var(--hot);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    display: none;
+  }
+}

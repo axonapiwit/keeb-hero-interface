@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.local
+.DS_Store
+
+# Frame captures from the animation-timing analysis (~118 MB of PNGs).
+# Throwaway measurement artifacts, not source. `ref/` in particular holds
+# frame-by-frame captures of a third-party site — kept local for comparison,
+# never redistributed. Regenerate with scripts/capture.mjs if needed.
+our/
+our_final/
+compare/
+ref/
