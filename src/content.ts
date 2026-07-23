@@ -7,7 +7,28 @@ export interface LayerCopy {
   title: string;
   body: string;
   anchor?: string;
+  /**
+   * Flip the page and the 3D backdrop to the light theme while this section
+   * owns the viewport.
+   *
+   * Chosen from what the part actually is, not from a fixed rhythm: brass wants
+   * a warm ground to glint against, and the near-black case reads as a
+   * silhouette against light. The pale keycaps and blue switches do the
+   * opposite — they need the dark to pop.
+   */
+  light?: boolean;
 }
+
+export interface Theme {
+  bg: string;
+  ink: string;
+  dim: string;
+}
+
+export const THEMES: { dark: Theme; light: Theme } = {
+  dark: { bg: '#0D0F14', ink: '#EDEAE3', dim: '#7C8290' },
+  light: { bg: '#E4DFD6', ink: '#14161B', dim: '#6A6E77' },
+};
 
 export const LAYERS: LayerCopy[] = [
   {
@@ -25,6 +46,7 @@ export const LAYERS: LayerCopy[] = [
     idx: 'LAYER 04',
     title: 'Plate',
     body: 'Brass. The part nobody sees and everybody hears. Watch it catch the light as the board turns.',
+    light: true,
   },
   {
     idx: 'LAYER 03',
@@ -36,5 +58,6 @@ export const LAYERS: LayerCopy[] = [
     title: 'The case',
     body: '313 × 123 mm of dark aluminium, walls high enough that only the keycap tops show. Flip-out feet set a 6° typing angle.',
     anchor: 'specs',
+    light: true,
   },
 ];

@@ -3,6 +3,9 @@
 :root {
   color-scheme: dark;
   --p: 0;
+  /* --bg / --ink / --dim are re-written by the scroll backdrop (three/theme.ts).
+     These are the dark defaults, used until the first frame lands. */
+  --bg: #0d0f14;
   --ink: #edeae3;
   --dim: #7c8290;
   --hot: #e8500f;
@@ -15,7 +18,7 @@ html {
   scroll-behavior: auto;
 }
 body {
-  background: #0d0f14;
+  background: var(--bg);
   color: var(--ink);
   font: 400 16px/1.55 Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -40,7 +43,9 @@ nav {
   padding: 1.6rem clamp(1.2rem, 4vw, 3rem);
   font-size: 13px;
   letter-spacing: 0.02em;
-  mix-blend-mode: difference;
+  /* was mix-blend-mode: difference — it turned to grey-on-grey the moment the
+     backdrop went light. --ink already tracks the backdrop, so use it. */
+  color: var(--ink);
 }
 nav .mark {
   font-weight: 800;
@@ -122,12 +127,17 @@ section {
   font-weight: 800;
 }
 
+/* Copy stays in the left column, always. The board is panned into the right
+   half (orbit.lateral), so alternating sides put every other section's text on
+   top of the model — invisible while the backdrop was dark, unreadable the
+   moment a section goes light. */
 .layer {
-  max-width: 32rem;
+  max-width: min(42vw, 32rem);
 }
-.layer:nth-of-type(even) {
-  margin-left: auto;
-  text-align: right;
+@media (max-width: 900px) {
+  .layer {
+    max-width: 100%;
+  }
 }
 .layer .idx {
   font-size: 12px;
@@ -180,7 +190,7 @@ section {
   z-index: 9;
   display: grid;
   place-content: center;
-  background: #0d0f14;
+  background: var(--bg);
   font-size: 12px;
   letter-spacing: 0.2em;
   text-transform: uppercase;

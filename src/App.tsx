@@ -24,6 +24,9 @@ export default function App() {
     startEngine({
       canvas,
       stages: LAYERS.length, // one scroll hold per layer section
+      // section list = hero + every layer + hero, so a layer's index is +1
+      sectionCount: LAYERS.length + 2,
+      lightSections: LAYERS.flatMap((l, i) => (l.light ? [i + 1] : [])),
       onReady: () => !cancelled && setReady(true),
     })
       .then((e) => {

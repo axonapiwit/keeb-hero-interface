@@ -69,6 +69,12 @@ export interface PartState {
   awayRot: THREE.Euler;
   /** Click micro-interaction, cm of downward travel. */
   press: number;
+  /**
+   * Intro-only growth. The reference opens on a single seed element that draws
+   * itself outward rather than parts flying into place, so parts scale up from
+   * near-nothing instead of arriving at full size.
+   */
+  scale: number;
 }
 
 /** Camera rig, mutated in place by the loop and by the debug panel. */

@@ -47,6 +47,7 @@ export function createStates(parts: Parts): PartState[] {
       away: new THREE.Vector3(move[0] + jx, move[1], move[2] + jz),
       awayRot: new THREE.Euler(spin[0] + jp, spin[1] + jr, spin[2]),
       press: 0,
+      scale: 1,
     });
   }
   return states;
@@ -67,6 +68,7 @@ export function applyStates(states: PartState[]): void {
       s.homeRot.y + s.awayRot.y * k,
       s.homeRot.z + s.awayRot.z * k,
     );
+    if (s.scale !== 1) s.node.scale.setScalar(s.scale);
   }
 }
 

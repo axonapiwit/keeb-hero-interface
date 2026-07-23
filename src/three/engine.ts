@@ -6,6 +6,7 @@ import { createAssembleTimeline } from './timelineAssemble';
 import { createInteractions } from './interactions';
 import { createDebug } from './debug';
 import { mergeSwitches, pruneShadowCasters } from './optimise';
+import { createBackdrop } from './theme';
 import type { ScrollExplode } from './scrollExplode';
 import type { AssembleTimeline } from './timelineAssemble';
 import type { Interactions } from './interactions';
@@ -52,6 +53,10 @@ export interface StartOptions {
   modelUrl?: string;
   /** Number of layer sections on the page — the scroll hold/handoff count. */
   stages?: number;
+  /** Every section on the page, hero bookends included. */
+  sectionCount?: number;
+  /** Indices into that list whose backdrop flips to the light theme. */
+  lightSections?: number[];
   onReady?: () => void;
 }
 
@@ -59,6 +64,8 @@ export async function startEngine({
   canvas,
   modelUrl = '/assets/keyboard_75.glb',
   stages,
+  sectionCount = 7,
+  lightSections = [],
   onReady,
 }: StartOptions): Promise<Engine> {
   // One controller for every listener in every module — teardown is one call,
@@ -110,6 +117,8 @@ export async function startEngine({
     lateral: IS_MOBILE ? 0 : -11,
   };
 
+  const backdrop = createBackdrop(scene, { lightSections, sectionCount });
+
   const debug = createDebug(
     { assemble, scroll, interactions, orbit, scene, bloom: IS_MOBILE ? null : bloom, states },
     signal,
@@ -147,6 +156,7 @@ export async function startEngine({
   const camTarget = new THREE.Vector3();
   const right = new THREE.Vector3(); // reused each frame, never reallocated
   let lastP = -1;
+  const baseBloom = bloom.strength;
 
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 0.05);
@@ -182,6 +192,14 @@ export async function startEngine({
       lastP = p3;
       document.documentElement.style.setProperty('--p', String(p3));
     }
+
+    // Backdrop follows raw scroll, not staged: the theme should hand over at
+    // the section boundary the reader is actually crossing.
+    const lightness = backdrop.update(scroll.raw);
+    // A light backdrop sits near the bloom threshold, so the whole frame starts
+    // glowing and washes out. Fade the bloom back as the page goes light.
+    bloom.strength = baseBloom * (1 - lightness * 0.8);
+
     composer.render();
   });
 
@@ -204,6 +222,7 @@ export async function startEngine({
       ac.abort();
       renderer.setAnimationLoop(null);
       assemble.dispose();
+      backdrop.dispose();
       debug.dispose();
       scene.remove(rig);
       root.traverse((o) => {
